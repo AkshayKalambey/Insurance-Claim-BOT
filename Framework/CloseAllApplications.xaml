@@ -125,7 +125,7 @@
                 <x:Boolean x:Key="IsExpanded">True</x:Boolean>
               </scg:Dictionary>
             </sap:WorkflowViewStateService.ViewState>
-            <ui:LogMessage DisplayName="Log Message" sap:VirtualizedContainerService.HintSize="382.4,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_2" Message="[&quot;Business or System Exception Occured for 1 or Multiple Line items in Dispatcher&quot;]" />
+            <ui:LogMessage DisplayName="Log Message" sap:VirtualizedContainerService.HintSize="382.4,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_2" Message="[&quot;Business or System Exception Occured for 1 or Multiple Line items in Dispatcher.&quot;]" />
             <ui:WriteRange StartingCell="{x:Null}" WorkbookPathResource="{x:Null}" AddHeaders="True" DataTable="[in_dtMissingFieldsTable]" DisplayName="Write Range Workbook" sap:VirtualizedContainerService.HintSize="382.4,139.2" sap2010:WorkflowViewState.IdRef="WriteRange_1" SheetName="Sheet1" WorkbookPath="[in_Config(&quot;Insurance_Dispatcher_BusinessExceptionFIlePath&quot;).ToString]" />
           </Sequence>
         </If.Then>

@@ -115,7 +115,7 @@
       <AssemblyReference>System.Runtime.Numerics</AssemblyReference>
     </scg:List>
   </TextExpression.ReferencesForImplementation>
-  <StateMachine InitialState="{x:Reference __ReferenceID2}" sap2010:Annotation.AnnotationText="Insurance Claim BOT Dispatcher&#xD;&#xA;GitHUB :- https://github.com/AkshayKalambey/Insurance-Claim-BOT&#xD;&#xA;login via Github Sign in&#xA;[Process description] :- Download the attached excel from Email and identifies the required data for processing and adds in Queue.&#xA;Below are the Business Logic it will use for identification:-&#xA;1. Policy Validation&#xA;    Validating if the policy is active and is of type 'Health'. Only active Health policies are eligible for further processing.&#xA;&#xA;If policy is invalid or expired:&#xA;    Policy is not valid or expired – claim rejected and not added to Queue.&#xA;&#xA;2. Blacklist Check&#xA;    Checking if the hospital is blacklisted for any fraudulent or non-compliant activities.&#xA;&#xA;If blacklisted:&#xA;    Hospital is blacklisted – sending rejection email to customer. Claim not added to Queue.&#xA;&#xA;3. Claim Frequency Check&#xA;    Checking if the policyholder has exceeded the allowed number of claims (more than 3 in a month).&#xA;&#xA;If exceeded:&#xA;    Claim frequency exceeded – sending for manual review. Claim not added to Queue.&#xA;&#xA;4. Treatment Type Validation&#xA;    Validating whether the treatment type provided in the claim is among the recognized/covered treatments.&#xA;&#xA;If unrecognized:&#xA;    Treatment type is not recognized – sending for manual review. Claim not added to Queue.&#xA;&#xA;If valid:&#xA;   Treatment type is valid – adding claim to Queue for further processing." DisplayName="General Business Process" sap:VirtualizedContainerService.HintSize="911.2,620" sap2010:WorkflowViewState.IdRef="StateMachine_1">
+  <StateMachine InitialState="{x:Reference __ReferenceID2}" sap2010:Annotation.AnnotationText="Insurance Claim BOT Dispatcher&#xA;GitHUB :- https://github.com/AkshayKalambey/Insurance-Claim-BOT&#xA;login via Github Sign in&#xA;[Process description] :- Download the attached excel from Email and identifies the required data for processing and adds in Queue.&#xA;Below are the Business Logic it will use for identification:-&#xA;1. Policy Validation&#xA;    Validating if the policy is active and is of type 'Health'. Only active Health policies are eligible for further processing.&#xA;&#xA;If policy is invalid or expired:&#xA;    Policy is not valid or expired – claim rejected and not added to Queue.&#xA;&#xA;2. Blacklist Check&#xA;    Checking if the hospital is blacklisted for any fraudulent or non-compliant activities.&#xA;&#xA;If blacklisted:&#xA;    Hospital is blacklisted – sending rejection email to customer. Claim not added to Queue.&#xA;&#xA;3. Claim Frequency Check&#xA;    Checking if the policyholder has exceeded the allowed number of claims (more than 3 in a month).&#xA;&#xA;If exceeded:&#xA;    Claim frequency exceeded – sending for manual review. Claim not added to Queue.&#xA;&#xA;4. Treatment Type Validation&#xA;    Validating whether the treatment type provided in the claim is among the recognized/covered treatments.&#xA;&#xA;If unrecognized:&#xA;    Treatment type is not recognized – sending for manual review. Claim not added to Queue.&#xA;&#xA;If valid:&#xA;   Treatment type is valid – adding claim to Queue for further processing." DisplayName="General Business Process" sap:VirtualizedContainerService.HintSize="911.2,620" sap2010:WorkflowViewState.IdRef="StateMachine_1">
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -128,7 +128,7 @@
     </sap:WorkflowViewStateService.ViewState>
     <State x:Name="__ReferenceID0" sap2010:Annotation.AnnotationText="Process a single transaction. &#xA;The result of the processing can be: 1) Success, 2) Business Exception, 3) System Exception. &#xA;In the case of a system exception, the transaction can be automatically retried." DisplayName="Process Transaction" sap:VirtualizedContainerService.HintSize="240,189.6" sap2010:WorkflowViewState.IdRef="State_3">
       <State.Entry>
-        <TryCatch DisplayName="Try to process transaction" sap:VirtualizedContainerService.HintSize="521.6,1466.4" sap2010:WorkflowViewState.IdRef="TryCatch_9">
+        <TryCatch DisplayName="Try to process transaction" sap:VirtualizedContainerService.HintSize="468.8,789.6" sap2010:WorkflowViewState.IdRef="TryCatch_9">
           <sap:WorkflowViewStateService.ViewState>
             <scg:Dictionary x:TypeArguments="x:String, x:Object">
               <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -136,22 +136,29 @@
             </scg:Dictionary>
           </sap:WorkflowViewStateService.ViewState>
           <TryCatch.Try>
-            <Sequence DisplayName="Process the current TransactionItem" sap:VirtualizedContainerService.HintSize="520,960.8" sap2010:WorkflowViewState.IdRef="Sequence_28">
+            <Sequence DisplayName="Process the current TransactionItem" sap:VirtualizedContainerService.HintSize="467.2,284" sap2010:WorkflowViewState.IdRef="Sequence_28">
+              <Sequence.Variables>
+                <Variable x:TypeArguments="sd:DataTable" Name="DT_RejectedClaimsResult" />
+              </Sequence.Variables>
               <sap:WorkflowViewStateService.ViewState>
                 <scg:Dictionary x:TypeArguments="x:String, x:Object">
                   <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                   <x:Boolean x:Key="IsPinned">False</x:Boolean>
                 </scg:Dictionary>
               </sap:WorkflowViewStateService.ViewState>
-              <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Process workflow" sap:VirtualizedContainerService.HintSize="486.4,176" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_24" UnSafe="False" WorkflowFileName="Framework\Process.xaml">
+              <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Process workflow" sap:VirtualizedContainerService.HintSize="433.6,176" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_24" UnSafe="False" WorkflowFileName="Framework\Process.xaml">
                 <ui:InvokeWorkflowFile.Arguments>
                   <InArgument x:TypeArguments="ui:QueueItem" x:Key="in_TransactionItem">[TransactionItem]</InArgument>
                   <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="in_Config">[Config]</InArgument>
                   <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtInputExcelData">[Dt_InputFileExcel]</InArgument>
                   <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_dtMandatoryFieldsMissing">[dt_MandatoryFieldMissing]</OutArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_strBlackListedHospitalList">[Config("Insurance_Dispatcher_BlackListedExcelPath").ToString]</InArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_strTreatmentTypesListPath">[Config("Insurance_Dispatcher_TreatmenttypelistPath").ToString]</InArgument>
+                  <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_DT_ManualReview">[Dt_ManualReview]</OutArgument>
+                  <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_DT_RejectedClaims">[DT_RejectedClaims]</OutArgument>
                 </ui:InvokeWorkflowFile.Arguments>
               </ui:InvokeWorkflowFile>
-              <ui:CommentOut DisplayName="Comment Out" sap:VirtualizedContainerService.HintSize="486.4,724.8" sap2010:WorkflowViewState.IdRef="CommentOut_1">
+              <ui:CommentOut DisplayName="Comment Out" sap:VirtualizedContainerService.HintSize="433.6,48" sap2010:WorkflowViewState.IdRef="CommentOut_1">
                 <ui:CommentOut.Body>
                   <Sequence DisplayName="Ignored Activities" sap:VirtualizedContainerService.HintSize="451.2,623.2" sap2010:WorkflowViewState.IdRef="Sequence_42">
                     <sap:WorkflowViewStateService.ViewState>
@@ -213,7 +220,7 @@
                 </ui:CommentOut.Body>
                 <sap:WorkflowViewStateService.ViewState>
                   <scg:Dictionary x:TypeArguments="x:String, x:Object">
-                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                    <x:Boolean x:Key="IsExpanded">False</x:Boolean>
                     <x:Boolean x:Key="IsPinned">False</x:Boolean>
                   </scg:Dictionary>
                 </sap:WorkflowViewStateService.ViewState>
@@ -232,15 +239,15 @@
                 <ActivityAction.Argument>
                   <DelegateInArgument x:TypeArguments="s:Exception" Name="Exception" />
                 </ActivityAction.Argument>
-                <Sequence DisplayName="Handle System Exception" sap:VirtualizedContainerService.HintSize="520,339.2" sap2010:WorkflowViewState.IdRef="Sequence_30">
+                <Sequence DisplayName="Handle System Exception" sap:VirtualizedContainerService.HintSize="467.2,339.2" sap2010:WorkflowViewState.IdRef="Sequence_30">
                   <sap:WorkflowViewStateService.ViewState>
                     <scg:Dictionary x:TypeArguments="x:String, x:Object">
                       <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                       <x:Boolean x:Key="IsPinned">False</x:Boolean>
                     </scg:Dictionary>
                   </sap:WorkflowViewStateService.ViewState>
-                  <ui:LogMessage DisplayName="Log Message" sap:VirtualizedContainerService.HintSize="486.4,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_39" Level="Info" Message="[&quot;Send the Email to Support Team&quot;]" />
-                  <Assign sap:VirtualizedContainerService.HintSize="484.8,104.8" sap2010:WorkflowViewState.IdRef="Assign_31">
+                  <ui:LogMessage DisplayName="Log Message" sap:VirtualizedContainerService.HintSize="433.6,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_39" Level="Info" Message="[&quot;Send the Email to Support Team&quot;]" />
+                  <Assign sap:VirtualizedContainerService.HintSize="433.6,104.8" sap2010:WorkflowViewState.IdRef="Assign_31">
                     <Assign.To>
                       <OutArgument x:TypeArguments="s:Exception">[SystemException]</OutArgument>
                     </Assign.To>
@@ -253,7 +260,7 @@
             </Catch>
           </TryCatch.Catches>
           <TryCatch.Finally>
-            <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="518.4,24.8" sap2010:WorkflowViewState.IdRef="Sequence_37">
+            <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="467.2,24.8" sap2010:WorkflowViewState.IdRef="Sequence_37">
               <sap:WorkflowViewStateService.ViewState>
                 <scg:Dictionary x:TypeArguments="x:String, x:Object">
                   <x:Boolean x:Key="IsExpanded">False</x:Boolean>
@@ -540,7 +547,7 @@
                     </scg:Dictionary>
                   </sap:WorkflowViewStateService.ViewState>
                   <Transition.To>
-                    <State x:Name="__ReferenceID1" sap2010:Annotation.AnnotationText="End process and close all applications used." DisplayName="End Process" sap:VirtualizedContainerService.HintSize="200,104" sap2010:WorkflowViewState.IdRef="State_1" IsFinal="True">
+                    <State x:Name="__ReferenceID1" sap2010:Annotation.AnnotationText="End process and close all applications used." DisplayName="End Process" sap:VirtualizedContainerService.HintSize="464,1185.6" sap2010:WorkflowViewState.IdRef="State_1" IsFinal="True">
                       <State.Entry>
                         <TryCatch DisplayName="Try to close all aplications" sap:VirtualizedContainerService.HintSize="419.2,1040.8" sap2010:WorkflowViewState.IdRef="TryCatch_4">
                           <sap:WorkflowViewStateService.ViewState>
@@ -554,6 +561,8 @@
                               <ui:InvokeWorkflowFile.Arguments>
                                 <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="in_Config">[Config]</InArgument>
                                 <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtMissingFieldsTable">[dt_MandatoryFieldMissing]</InArgument>
+                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtRejectedClaims">[DT_RejectedClaims]</InArgument>
+                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_dtManualReviewClaims">[Dt_ManualReview]</InArgument>
                               </ui:InvokeWorkflowFile.Arguments>
                             </ui:InvokeWorkflowFile>
                           </TryCatch.Try>
@@ -699,6 +708,8 @@
       <Variable x:TypeArguments="x:Int32" sap2010:Annotation.AnnotationText="Used to control the number of consecutive system exceptions." Default="0" Name="ConsecutiveSystemExceptions" />
       <Variable x:TypeArguments="sd:DataTable" Name="Dt_InputFileExcel" />
       <Variable x:TypeArguments="sd:DataTable" Name="dt_MandatoryFieldMissing" />
+      <Variable x:TypeArguments="sd:DataTable" Name="Dt_ManualReview" />
+      <Variable x:TypeArguments="sd:DataTable" Name="DT_RejectedClaims" />
     </StateMachine.Variables>
   </StateMachine>
 </Activity>

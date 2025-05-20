@@ -1,10 +1,20 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:this="clr-namespace:" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
     <x:Property sap2010:Annotation.AnnotationText="Transaction item to be processed." Name="in_TransactionItem" Type="InArgument(ui:QueueItem)" />
     <x:Property sap2010:Annotation.AnnotationText="Dictionary structure to store configuration data of the process (settings, constants and assets)." Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
     <x:Property Name="in_dtInputExcelData" Type="InArgument(sd:DataTable)" />
     <x:Property Name="out_dtMandatoryFieldsMissing" Type="OutArgument(sd:DataTable)" />
+    <x:Property Name="in_strBlackListedHospitalList" Type="InArgument(x:String)" />
+    <x:Property Name="in_strTreatmentTypesListPath" Type="InArgument(x:String)" />
+    <x:Property Name="out_DT_ManualReview" Type="OutArgument(sd:DataTable)" />
+    <x:Property Name="out_DT_RejectedClaims" Type="OutArgument(sd:DataTable)" />
   </x:Members>
+  <this:Process.in_strBlackListedHospitalList>
+    <InArgument x:TypeArguments="x:String" />
+  </this:Process.in_strBlackListedHospitalList>
+  <this:Process.in_strTreatmentTypesListPath>
+    <InArgument x:TypeArguments="x:String" />
+  </this:Process.in_strTreatmentTypesListPath>
   <VisualBasic.Settings>
     <x:Null />
   </VisualBasic.Settings>
@@ -46,6 +56,9 @@
       <x:String>System.Linq.Expressions</x:String>
       <x:String>System.Numerics</x:String>
       <x:String>System.Activities.Runtime.Collections</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Platform.ResourceHandling</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
     </scg:List>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
@@ -106,36 +119,116 @@
       <AssemblyReference>System.Linq.Async</AssemblyReference>
       <AssemblyReference>System.Collections.NonGeneric</AssemblyReference>
       <AssemblyReference>System.Runtime.Numerics</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Platform</AssemblyReference>
     </scg:List>
   </TextExpression.ReferencesForImplementation>
-  <Sequence sap2010:Annotation.AnnotationText="Invoke major steps of the business process, which are usually implemented by multiple subworkflows.&#xA;&#xA;If a BusinessRuleException is thrown, the transaction is skipped. &#xA;If another kind of exception occurs, the current transaction can be retried. " DisplayName="Process" sap:VirtualizedContainerService.HintSize="905.2,2086.4" sap2010:WorkflowViewState.IdRef="Sequence_1">
+  <Sequence sap2010:Annotation.AnnotationText="Invoke major steps of the business process, which are usually implemented by multiple subworkflows.&#xA;&#xA;If a BusinessRuleException is thrown, the transaction is skipped. &#xA;If another kind of exception occurs, the current transaction can be retried. " DisplayName="Process" sap:VirtualizedContainerService.HintSize="905.2,3237.6" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="DT_BlackListedHospitalList" />
+      <Variable x:TypeArguments="x:String" Name="str_BlackListedHospitalList" />
+      <Variable x:TypeArguments="x:Boolean" Name="Bool_IsTreatmentTypeKnown" />
+      <Variable x:TypeArguments="x:String" Name="str_TreatmentTypeCategory" />
+      <Variable x:TypeArguments="sd:DataTable" Name="DT_TreatmentType" />
+    </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
         <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
-    <ui:LogMessage DisplayName="Log Message Process Start" sap:VirtualizedContainerService.HintSize="521.6,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Started Adding the Data into Queue&quot;]" />
-    <ui:BuildDataTable DataTable="[out_dtMandatoryFieldsMissing]" DisplayName="Build Data Table" sap:VirtualizedContainerService.HintSize="521.6,92" sap2010:WorkflowViewState.IdRef="BuildDataTable_2" TableInfo="&lt;NewDataSet&gt;&#xD;&#xA;  &lt;xs:schema id=&quot;NewDataSet&quot; xmlns=&quot;&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:msdata=&quot;urn:schemas-microsoft-com:xml-msdata&quot;&gt;&#xD;&#xA;    &lt;xs:element name=&quot;NewDataSet&quot; msdata:IsDataSet=&quot;true&quot; msdata:MainDataTable=&quot;TableName&quot; msdata:UseCurrentLocale=&quot;true&quot;&gt;&#xD;&#xA;      &lt;xs:complexType&gt;&#xD;&#xA;        &lt;xs:choice minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot;&gt;&#xD;&#xA;          &lt;xs:element name=&quot;TableName&quot;&gt;&#xD;&#xA;            &lt;xs:complexType&gt;&#xD;&#xA;              &lt;xs:sequence&gt;&#xD;&#xA;                &lt;xs:element name=&quot;Claim_x0020_ID&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xD;&#xA;                &lt;xs:element name=&quot;Type_x0020_Of_x0020_Error&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xD;&#xA;                &lt;xs:element name=&quot;Reason&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xD;&#xA;              &lt;/xs:sequence&gt;&#xD;&#xA;            &lt;/xs:complexType&gt;&#xD;&#xA;          &lt;/xs:element&gt;&#xD;&#xA;        &lt;/xs:choice&gt;&#xD;&#xA;      &lt;/xs:complexType&gt;&#xD;&#xA;    &lt;/xs:element&gt;&#xD;&#xA;  &lt;/xs:schema&gt;&#xD;&#xA;&lt;/NewDataSet&gt;" />
-    <Sequence DisplayName="Adding Data Into Queue" sap:VirtualizedContainerService.HintSize="521.6,1641.6" sap2010:WorkflowViewState.IdRef="Sequence_2">
+    <ui:LogMessage DisplayName="Log Message Process Start" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Started Adding the Data into Queue&quot;]" />
+    <ui:BuildDataTable DataTable="[out_dtMandatoryFieldsMissing]" DisplayName="Build Data Table Mandatory Fields Missing" sap:VirtualizedContainerService.HintSize="556.8,92" sap2010:WorkflowViewState.IdRef="BuildDataTable_2" TableInfo="&lt;NewDataSet&gt;&#xA;  &lt;xs:schema id=&quot;NewDataSet&quot; xmlns=&quot;&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:msdata=&quot;urn:schemas-microsoft-com:xml-msdata&quot;&gt;&#xA;    &lt;xs:element name=&quot;NewDataSet&quot; msdata:IsDataSet=&quot;true&quot; msdata:MainDataTable=&quot;TableName&quot; msdata:UseCurrentLocale=&quot;true&quot;&gt;&#xA;      &lt;xs:complexType&gt;&#xA;        &lt;xs:choice minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot;&gt;&#xA;          &lt;xs:element name=&quot;TableName&quot;&gt;&#xA;            &lt;xs:complexType&gt;&#xA;              &lt;xs:sequence&gt;&#xA;                &lt;xs:element name=&quot;Claim_x0020_ID&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Type_x0020_Of_x0020_Error&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Reason&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;              &lt;/xs:sequence&gt;&#xA;            &lt;/xs:complexType&gt;&#xA;          &lt;/xs:element&gt;&#xA;        &lt;/xs:choice&gt;&#xA;      &lt;/xs:complexType&gt;&#xA;    &lt;/xs:element&gt;&#xA;  &lt;/xs:schema&gt;&#xA;&lt;/NewDataSet&gt;" />
+    <ui:BuildDataTable DataTable="[out_DT_RejectedClaims]" DisplayName="Build Data Table Rejected Claims" sap:VirtualizedContainerService.HintSize="556.8,92" sap2010:WorkflowViewState.IdRef="BuildDataTable_3" TableInfo="&lt;NewDataSet&gt;&#xA;  &lt;xs:schema id=&quot;NewDataSet&quot; xmlns=&quot;&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:msdata=&quot;urn:schemas-microsoft-com:xml-msdata&quot;&gt;&#xA;    &lt;xs:element name=&quot;NewDataSet&quot; msdata:IsDataSet=&quot;true&quot; msdata:MainDataTable=&quot;TableName&quot; msdata:UseCurrentLocale=&quot;true&quot;&gt;&#xA;      &lt;xs:complexType&gt;&#xA;        &lt;xs:choice minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot;&gt;&#xA;          &lt;xs:element name=&quot;TableName&quot;&gt;&#xA;            &lt;xs:complexType&gt;&#xA;              &lt;xs:sequence&gt;&#xA;                &lt;xs:element name=&quot;Claim_x0020_ID&quot; msdata:Caption=&quot;&quot; minOccurs=&quot;0&quot;&gt;&#xA;                  &lt;xs:simpleType&gt;&#xA;                    &lt;xs:restriction base=&quot;xs:string&quot;&gt;&#xA;                      &lt;xs:maxLength value=&quot;100&quot; /&gt;&#xA;                    &lt;/xs:restriction&gt;&#xA;                  &lt;/xs:simpleType&gt;&#xA;                &lt;/xs:element&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Number&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Holder_x0020_Name&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Expiry_x0020_Date&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Type&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;              &lt;/xs:sequence&gt;&#xA;            &lt;/xs:complexType&gt;&#xA;          &lt;/xs:element&gt;&#xA;        &lt;/xs:choice&gt;&#xA;      &lt;/xs:complexType&gt;&#xA;    &lt;/xs:element&gt;&#xA;  &lt;/xs:schema&gt;&#xA;&lt;/NewDataSet&gt;" />
+    <ui:BuildDataTable DataTable="[out_DT_ManualReview]" DisplayName="Build Data Table Manual Review Claims" sap:VirtualizedContainerService.HintSize="556.8,92" sap2010:WorkflowViewState.IdRef="BuildDataTable_4" TableInfo="&lt;NewDataSet&gt;&#xA;  &lt;xs:schema id=&quot;NewDataSet&quot; xmlns=&quot;&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:msdata=&quot;urn:schemas-microsoft-com:xml-msdata&quot;&gt;&#xA;    &lt;xs:element name=&quot;NewDataSet&quot; msdata:IsDataSet=&quot;true&quot; msdata:MainDataTable=&quot;TableName&quot; msdata:UseCurrentLocale=&quot;true&quot;&gt;&#xA;      &lt;xs:complexType&gt;&#xA;        &lt;xs:choice minOccurs=&quot;0&quot; maxOccurs=&quot;unbounded&quot;&gt;&#xA;          &lt;xs:element name=&quot;TableName&quot;&gt;&#xA;            &lt;xs:complexType&gt;&#xA;              &lt;xs:sequence&gt;&#xA;                &lt;xs:element name=&quot;Claim_x0020_ID&quot; msdata:Caption=&quot;&quot; minOccurs=&quot;0&quot;&gt;&#xA;                  &lt;xs:simpleType&gt;&#xA;                    &lt;xs:restriction base=&quot;xs:string&quot;&gt;&#xA;                      &lt;xs:maxLength value=&quot;100&quot; /&gt;&#xA;                    &lt;/xs:restriction&gt;&#xA;                  &lt;/xs:simpleType&gt;&#xA;                &lt;/xs:element&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Number&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Holder_x0020_Name&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Expiry_x0020_Date&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;                &lt;xs:element name=&quot;Policy_x0020_Type&quot; msdata:Caption=&quot;&quot; type=&quot;xs:string&quot; minOccurs=&quot;0&quot; /&gt;&#xA;              &lt;/xs:sequence&gt;&#xA;            &lt;/xs:complexType&gt;&#xA;          &lt;/xs:element&gt;&#xA;        &lt;/xs:choice&gt;&#xA;      &lt;/xs:complexType&gt;&#xA;    &lt;/xs:element&gt;&#xA;  &lt;/xs:schema&gt;&#xA;&lt;/NewDataSet&gt;" />
+    <ui:ReadRange WorkbookPathResource="{x:Null}" AddHeaders="True" DataTable="[DT_BlackListedHospitalList]" DisplayName="Reading Blacklisted Hospital List" sap:VirtualizedContainerService.HintSize="556.8,120" sap2010:WorkflowViewState.IdRef="ReadRange_1" SheetName="Blacklisted" WorkbookPath="[in_strBlackListedHospitalList]">
+      <ui:ReadRange.Range>
+        <InArgument x:TypeArguments="x:String">
+          <Literal x:TypeArguments="x:String" Value="" />
+        </InArgument>
+      </ui:ReadRange.Range>
+    </ui:ReadRange>
+    <ui:OutputDataTable DataTable="[DT_BlackListedHospitalList]" DisplayName="Output Data Table as Text" sap:VirtualizedContainerService.HintSize="556.8,112.8" sap2010:WorkflowViewState.IdRef="OutputDataTable_1" Text="[str_BlackListedHospitalList]" />
+    <ui:ReadRange WorkbookPathResource="{x:Null}" AddHeaders="True" DataTable="[DT_TreatmentType]" DisplayName="Reading Treatment Type" sap:VirtualizedContainerService.HintSize="556.8,120" sap2010:WorkflowViewState.IdRef="ReadRange_2" SheetName="CappingRules" WorkbookPath="[in_strTreatmentTypesListPath]">
+      <ui:ReadRange.Range>
+        <InArgument x:TypeArguments="x:String">
+          <Literal x:TypeArguments="x:String" Value="" />
+        </InArgument>
+      </ui:ReadRange.Range>
+    </ui:ReadRange>
+    <ui:OutputDataTable DataTable="[DT_TreatmentType]" DisplayName="Output Data Table as Text" sap:VirtualizedContainerService.HintSize="556.8,112.8" sap2010:WorkflowViewState.IdRef="OutputDataTable_2" Text="[str_TreatmentTypeCategory]" />
+    <Sequence DisplayName="Adding Data Into Queue" sap:VirtualizedContainerService.HintSize="556.8,2143.2" sap2010:WorkflowViewState.IdRef="Sequence_2">
       <sap:WorkflowViewStateService.ViewState>
         <scg:Dictionary x:TypeArguments="x:String, x:Object">
           <x:Boolean x:Key="IsExpanded">True</x:Boolean>
         </scg:Dictionary>
       </sap:WorkflowViewStateService.ViewState>
-      <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[in_dtInputExcelData]" DisplayName="For Each Row in Data Table" sap:VirtualizedContainerService.HintSize="488,1549.6" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
+      <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[in_dtInputExcelData]" DisplayName="For Each Row in Data Table" sap:VirtualizedContainerService.HintSize="523.2,2051.2" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
         <ui:ForEachRow.Body>
           <ActivityAction x:TypeArguments="sd:DataRow">
             <ActivityAction.Argument>
               <DelegateInArgument x:TypeArguments="sd:DataRow" Name="CurrentRow" />
             </ActivityAction.Argument>
-            <Sequence DisplayName="Body" sap:VirtualizedContainerService.HintSize="486.4,1376.8" sap2010:WorkflowViewState.IdRef="Sequence_3">
+            <Sequence DisplayName="Body" sap:VirtualizedContainerService.HintSize="521.6,1878.4" sap2010:WorkflowViewState.IdRef="Sequence_3">
+              <Sequence.Variables>
+                <Variable x:TypeArguments="x:String" Name="str_PolicyStatus" />
+                <Variable x:TypeArguments="x:Boolean" Name="Bool_IsHospitalBlackListed" />
+                <Variable x:TypeArguments="x:String" Name="str_ClaimDate" />
+                <Variable x:TypeArguments="x:String" Name="str_TreatmentType" />
+                <Variable x:TypeArguments="x:Boolean" Name="Bool_PolicyTypeHealth" />
+              </Sequence.Variables>
               <sap:WorkflowViewStateService.ViewState>
                 <scg:Dictionary x:TypeArguments="x:String, x:Object">
                   <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                 </scg:Dictionary>
               </sap:WorkflowViewStateService.ViewState>
-              <If x:Name="__ReferenceID0" Condition="[Not(String.IsNullOrWhitespace(CurrentRow(&quot;Claim ID&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Number&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Holder Name&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Type&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Expiry Date&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Claim Date&quot;).ToString)) And  Not(String.IsNullOrWhitespace(CurrentRow(&quot;Hospital Name&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Treatment Type&quot;).ToString))]" sap:VirtualizedContainerService.HintSize="452.8,1212" sap2010:WorkflowViewState.IdRef="If_2">
+              <ui:MultipleAssign DisplayName="Multiple Assign" sap:VirtualizedContainerService.HintSize="488,274.4" sap2010:WorkflowViewState.IdRef="MultipleAssign_1">
+                <ui:MultipleAssign.AssignOperations>
+                  <scg:List x:TypeArguments="ui:AssignOperation" Capacity="8">
+                    <ui:AssignOperation sap2010:WorkflowViewState.IdRef="AssignOperation_1">
+                      <ui:AssignOperation.To>
+                        <OutArgument x:TypeArguments="x:String">[str_PolicyStatus]</OutArgument>
+                      </ui:AssignOperation.To>
+                      <ui:AssignOperation.Value>
+                        <InArgument x:TypeArguments="x:String">[CurrentRow("Policy Expiry Date").ToString]</InArgument>
+                      </ui:AssignOperation.Value>
+                    </ui:AssignOperation>
+                    <ui:AssignOperation sap2010:WorkflowViewState.IdRef="AssignOperation_2">
+                      <ui:AssignOperation.To>
+                        <OutArgument x:TypeArguments="x:Boolean">[Bool_IsHospitalBlackListed]</OutArgument>
+                      </ui:AssignOperation.To>
+                      <ui:AssignOperation.Value>
+                        <InArgument x:TypeArguments="x:Boolean">[str_BlackListedHospitalList.Contains(CurrentRow("Hospital Name").ToString)]</InArgument>
+                      </ui:AssignOperation.Value>
+                    </ui:AssignOperation>
+                    <ui:AssignOperation sap2010:WorkflowViewState.IdRef="AssignOperation_3">
+                      <ui:AssignOperation.To>
+                        <OutArgument x:TypeArguments="x:String">[str_ClaimDate]</OutArgument>
+                      </ui:AssignOperation.To>
+                      <ui:AssignOperation.Value>
+                        <InArgument x:TypeArguments="x:String">[CurrentRow("Claim Date").ToString]</InArgument>
+                      </ui:AssignOperation.Value>
+                    </ui:AssignOperation>
+                    <ui:AssignOperation sap2010:WorkflowViewState.IdRef="AssignOperation_4">
+                      <ui:AssignOperation.To>
+                        <OutArgument x:TypeArguments="x:Boolean">[Bool_IsTreatmentTypeKnown]</OutArgument>
+                      </ui:AssignOperation.To>
+                      <ui:AssignOperation.Value>
+                        <InArgument x:TypeArguments="x:Boolean">[str_TreatmentTypeCategory.Contains(CurrentRow("Treatment Type").ToString)]</InArgument>
+                      </ui:AssignOperation.Value>
+                    </ui:AssignOperation>
+                    <ui:AssignOperation sap2010:WorkflowViewState.IdRef="AssignOperation_5">
+                      <ui:AssignOperation.To>
+                        <OutArgument x:TypeArguments="x:Boolean">[Bool_PolicyTypeHealth]</OutArgument>
+                      </ui:AssignOperation.To>
+                      <ui:AssignOperation.Value>
+                        <InArgument x:TypeArguments="x:Boolean">[CurrentRow("Policy Type").ToString.Trim &lt;&gt; "Health"]</InArgument>
+                      </ui:AssignOperation.Value>
+                    </ui:AssignOperation>
+                  </scg:List>
+                </ui:MultipleAssign.AssignOperations>
+              </ui:MultipleAssign>
+              <If x:Name="__ReferenceID0" Condition="[(Not(String.IsNullOrWhitespace(CurrentRow(&quot;Claim ID&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Number&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Holder Name&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Type&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Policy Expiry Date&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Claim Date&quot;).ToString)) And  Not(String.IsNullOrWhitespace(CurrentRow(&quot;Hospital Name&quot;).ToString)) And Not(String.IsNullOrWhitespace(CurrentRow(&quot;Treatment Type&quot;).ToString)))]" DisplayName="If (Validating For Mandatory Fields)" sap:VirtualizedContainerService.HintSize="488,1439.2" sap2010:WorkflowViewState.IdRef="If_2">
                 <sap:WorkflowViewStateService.ViewState>
                   <scg:Dictionary x:TypeArguments="x:String, x:Object">
                     <x:Boolean x:Key="IsExpanded">True</x:Boolean>
@@ -143,81 +236,141 @@
                   </scg:Dictionary>
                 </sap:WorkflowViewStateService.ViewState>
                 <If.Then>
-                  <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="451.2,802.4" sap2010:WorkflowViewState.IdRef="Sequence_9">
+                  <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="486.4,1029.6" sap2010:WorkflowViewState.IdRef="Sequence_9">
                     <sap:WorkflowViewStateService.ViewState>
                       <scg:Dictionary x:TypeArguments="x:String, x:Object">
                         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                       </scg:Dictionary>
                     </sap:WorkflowViewStateService.ViewState>
-                    <TryCatch DisplayName="Try Catch" sap:VirtualizedContainerService.HintSize="417.6,742.4" sap2010:WorkflowViewState.IdRef="TryCatch_2">
-                      <TryCatch.Try>
-                        <ui:AddQueueItem ServiceBaseAddress="{x:Null}" TimeoutMS="{x:Null}" DisplayName="Add Queue Item" FolderPath="Shared" sap:VirtualizedContainerService.HintSize="416,194.4" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" Priority="Normal" QueueType="[in_Config(&quot;OrchestratorQueueName&quot;).ToString]">
-                          <ui:AddQueueItem.ItemInformation>
-                            <InArgument x:TypeArguments="x:String" x:Key="Claim ID">[CurrentRow("Claim ID").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Policy Number">[CurrentRow("Policy Number").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Policy Holder Name">[CurrentRow("Policy Holder Name").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Policy Type">[CurrentRow("Policy Type").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Policy Expiry Date">[CurrentRow("Policy Expiry Date").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Claim Date">[CurrentRow("Claim Date").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Hospital Name">[CurrentRow("Hospital Name").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Treatment Type">[CurrentRow("Treatment Type").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Treatment Cost">[CurrentRow("Treatment Cost").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Room Rent (per day)">[CurrentRow("Room Rent (per day)").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Room Rent Days">[CurrentRow("Room Rent Days").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="ICU Charges (per day)">[CurrentRow("ICU Charges (per day)").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="ICU Days">[CurrentRow("ICU Days").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Consultation Charges">[CurrentRow("Consultation Charges").ToString]</InArgument>
-                            <InArgument x:TypeArguments="x:String" x:Key="Medicine Charges">[CurrentRow("Medicine Charges").ToString]</InArgument>
-                          </ui:AddQueueItem.ItemInformation>
-                          <sap:WorkflowViewStateService.ViewState>
-                            <scg:Dictionary x:TypeArguments="x:String, x:Object">
-                              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-                              <x:Boolean x:Key="IsPinned">False</x:Boolean>
-                            </scg:Dictionary>
-                          </sap:WorkflowViewStateService.ViewState>
-                        </ui:AddQueueItem>
-                      </TryCatch.Try>
-                      <TryCatch.Catches>
-                        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_2">
-                          <ActivityAction x:TypeArguments="s:Exception">
-                            <ActivityAction.Argument>
-                              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
-                            </ActivityAction.Argument>
-                            <Sequence DisplayName="Body" sap:VirtualizedContainerService.HintSize="416,271.2" sap2010:WorkflowViewState.IdRef="Sequence_12">
-                              <sap:WorkflowViewStateService.ViewState>
-                                <scg:Dictionary x:TypeArguments="x:String, x:Object">
-                                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
-                                </scg:Dictionary>
-                              </sap:WorkflowViewStateService.ViewState>
-                              <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;Claim ID&quot;).ToString,&quot;System Exception&quot;,exception.Message+&quot; at Source: &quot;+exception.Source}]" DataTable="[out_dtMandatoryFieldsMissing]" DisplayName="Add Data Row (For System Exception)" sap:VirtualizedContainerService.HintSize="382.4,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_5" />
-                            </Sequence>
-                          </ActivityAction>
-                        </Catch>
-                      </TryCatch.Catches>
-                      <TryCatch.Finally>
-                        <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="416,89.6" sap2010:WorkflowViewState.IdRef="Sequence_13">
+                    <If Condition="[(CDate(CurrentRow(&quot;Policy Expiry Date&quot;).ToString) &lt;= Date.Now) Or Bool_PolicyTypeHealth Or (Bool_IsHospitalBlackListed)]" DisplayName="If (Validating for Rejected Items)" sap:VirtualizedContainerService.HintSize="452.8,969.6" sap2010:WorkflowViewState.IdRef="If_3">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                          <x:Boolean x:Key="IsPinned">False</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                      <If.Then>
+                        <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="451.2,271.2" sap2010:WorkflowViewState.IdRef="Sequence_14">
                           <sap:WorkflowViewStateService.ViewState>
                             <scg:Dictionary x:TypeArguments="x:String, x:Object">
                               <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                             </scg:Dictionary>
                           </sap:WorkflowViewStateService.ViewState>
+                          <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;Claim ID&quot;).ToString,CurrentRow(&quot;Policy Number&quot;).ToString,CurrentRow(&quot;Policy Holder Name&quot;).ToString,CurrentRow(&quot;Policy Expiry Date&quot;).ToString,CurrentRow(&quot;Policy Type&quot;).ToString}]" DataTable="[out_DT_RejectedClaims]" DisplayName="Add Data Row (Rejected Claims)" sap:VirtualizedContainerService.HintSize="417.6,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_6" />
                         </Sequence>
-                      </TryCatch.Finally>
-                    </TryCatch>
+                      </If.Then>
+                      <If.Else>
+                        <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="451.2,568.8" sap2010:WorkflowViewState.IdRef="Sequence_15">
+                          <sap:WorkflowViewStateService.ViewState>
+                            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                            </scg:Dictionary>
+                          </sap:WorkflowViewStateService.ViewState>
+                          <If Condition="[Not(Bool_IsTreatmentTypeKnown)]" DisplayName="If (Validating for Manual Review Items)" sap:VirtualizedContainerService.HintSize="417.6,508.8" sap2010:WorkflowViewState.IdRef="If_5">
+                            <sap:WorkflowViewStateService.ViewState>
+                              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                <x:Boolean x:Key="IsPinned">False</x:Boolean>
+                              </scg:Dictionary>
+                            </sap:WorkflowViewStateService.ViewState>
+                            <If.Then>
+                              <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="416,271.2" sap2010:WorkflowViewState.IdRef="Sequence_18">
+                                <sap:WorkflowViewStateService.ViewState>
+                                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                  </scg:Dictionary>
+                                </sap:WorkflowViewStateService.ViewState>
+                                <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;Claim ID&quot;).ToString,CurrentRow(&quot;Policy Number&quot;).ToString,CurrentRow(&quot;Policy Holder Name&quot;).ToString,CurrentRow(&quot;Policy Expiry Date&quot;).ToString,CurrentRow(&quot;Policy Type&quot;).ToString}]" DataTable="[out_DT_ManualReview]" DisplayName="Add Data Row (Manual Review Claims)" sap:VirtualizedContainerService.HintSize="382.4,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_8" />
+                              </Sequence>
+                            </If.Then>
+                            <If.Else>
+                              <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="416,108" sap2010:WorkflowViewState.IdRef="Sequence_19">
+                                <sap:WorkflowViewStateService.ViewState>
+                                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                  </scg:Dictionary>
+                                </sap:WorkflowViewStateService.ViewState>
+                                <TryCatch DisplayName="Try Catch (Adding Data in Queue)" sap:VirtualizedContainerService.HintSize="382.4,48" sap2010:WorkflowViewState.IdRef="TryCatch_3">
+                                  <sap:WorkflowViewStateService.ViewState>
+                                    <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                      <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+                                      <x:Boolean x:Key="IsPinned">False</x:Boolean>
+                                    </scg:Dictionary>
+                                  </sap:WorkflowViewStateService.ViewState>
+                                  <TryCatch.Try>
+                                    <ui:AddQueueItem ServiceBaseAddress="{x:Null}" TimeoutMS="{x:Null}" DisplayName="Add Queue Item" FolderPath="Shared" sap:VirtualizedContainerService.HintSize="416,194.4" sap2010:WorkflowViewState.IdRef="AddQueueItem_2" Priority="Normal" QueueType="[in_Config(&quot;OrchestratorQueueName&quot;).ToString]">
+                                      <ui:AddQueueItem.ItemInformation>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Claim ID">[CurrentRow("Claim ID").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Policy Number">[CurrentRow("Policy Number").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Policy Holder Name">[CurrentRow("Policy Holder Name").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Policy Type">[CurrentRow("Policy Type").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Policy Expiry Date">[CurrentRow("Policy Expiry Date").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Claim Date">[CurrentRow("Claim Date").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Hospital Name">[CurrentRow("Hospital Name").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Treatment Type">[CurrentRow("Treatment Type").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Treatment Cost">[CurrentRow("Treatment Cost").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Room Rent (per day)">[CurrentRow("Room Rent (per day)").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Room Rent Days">[CurrentRow("Room Rent Days").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="ICU Charges (per day)">[CurrentRow("ICU Charges (per day)").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="ICU Days">[CurrentRow("ICU Days").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Consultation Charges">[CurrentRow("Consultation Charges").ToString]</InArgument>
+                                        <InArgument x:TypeArguments="x:String" x:Key="Medicine Charges">[CurrentRow("Medicine Charges").ToString]</InArgument>
+                                      </ui:AddQueueItem.ItemInformation>
+                                      <sap:WorkflowViewStateService.ViewState>
+                                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                          <x:Boolean x:Key="IsPinned">False</x:Boolean>
+                                        </scg:Dictionary>
+                                      </sap:WorkflowViewStateService.ViewState>
+                                    </ui:AddQueueItem>
+                                  </TryCatch.Try>
+                                  <TryCatch.Catches>
+                                    <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
+                                      <ActivityAction x:TypeArguments="s:Exception">
+                                        <ActivityAction.Argument>
+                                          <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                                        </ActivityAction.Argument>
+                                        <Sequence DisplayName="Body" sap:VirtualizedContainerService.HintSize="416,271.2" sap2010:WorkflowViewState.IdRef="Sequence_20">
+                                          <sap:WorkflowViewStateService.ViewState>
+                                            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                            </scg:Dictionary>
+                                          </sap:WorkflowViewStateService.ViewState>
+                                          <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;Claim ID&quot;).ToString,&quot;System Exception&quot;,exception.Message+&quot; at Source: &quot;+exception.Source}]" DataTable="[out_dtMandatoryFieldsMissing]" DisplayName="Add Data Row (For System Exception)" sap:VirtualizedContainerService.HintSize="382.4,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_9" />
+                                        </Sequence>
+                                      </ActivityAction>
+                                    </Catch>
+                                  </TryCatch.Catches>
+                                  <TryCatch.Finally>
+                                    <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="416,89.6" sap2010:WorkflowViewState.IdRef="Sequence_21">
+                                      <sap:WorkflowViewStateService.ViewState>
+                                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                        </scg:Dictionary>
+                                      </sap:WorkflowViewStateService.ViewState>
+                                    </Sequence>
+                                  </TryCatch.Finally>
+                                </TryCatch>
+                              </Sequence>
+                            </If.Else>
+                          </If>
+                        </Sequence>
+                      </If.Else>
+                    </If>
                   </Sequence>
                 </If.Then>
                 <If.Else>
-                  <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="451.2,271.2" sap2010:WorkflowViewState.IdRef="Sequence_10">
+                  <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="486.4,271.2" sap2010:WorkflowViewState.IdRef="Sequence_10">
                     <sap:WorkflowViewStateService.ViewState>
                       <scg:Dictionary x:TypeArguments="x:String, x:Object">
                         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                       </scg:Dictionary>
                     </sap:WorkflowViewStateService.ViewState>
-                    <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;Claim ID&quot;).ToString,&quot;Business Exception&quot;,&quot;Mandatory Fields Missing&quot;}]" DataTable="[out_dtMandatoryFieldsMissing]" DisplayName="Add Data Row (For Business Exception)" sap:VirtualizedContainerService.HintSize="417.6,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_4" />
+                    <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{CurrentRow(&quot;Claim ID&quot;).ToString,&quot;Business Exception&quot;,&quot;Mandatory Fields Missing&quot;}]" DataTable="[out_dtMandatoryFieldsMissing]" DisplayName="Add Data Row (For Business Exception)" sap:VirtualizedContainerService.HintSize="452.8,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_4" />
                   </Sequence>
                 </If.Else>
               </If>
-              <ui:CommentOut DisplayName="Comment Out" sap:VirtualizedContainerService.HintSize="452.8,56.8" sap2010:WorkflowViewState.IdRef="CommentOut_2">
+              <ui:CommentOut DisplayName="Comment Out" sap:VirtualizedContainerService.HintSize="488,56.8" sap2010:WorkflowViewState.IdRef="CommentOut_2">
                 <ui:CommentOut.Body>
                   <Sequence DisplayName="Ignored Activities" sap:VirtualizedContainerService.HintSize="451.2,605.6" sap2010:WorkflowViewState.IdRef="Sequence_11">
                     <sap:WorkflowViewStateService.ViewState>
@@ -273,7 +426,7 @@
                   </scg:Dictionary>
                 </sap:WorkflowViewStateService.ViewState>
               </ui:CommentOut>
-              <ui:CommentOut DisplayName="Comment Out" sap:VirtualizedContainerService.HintSize="452.8,48" sap2010:WorkflowViewState.IdRef="CommentOut_1">
+              <ui:CommentOut DisplayName="Comment Out" sap:VirtualizedContainerService.HintSize="488,48" sap2010:WorkflowViewState.IdRef="CommentOut_1">
                 <ui:CommentOut.Body>
                   <Sequence DisplayName="Ignored Activities" sap:VirtualizedContainerService.HintSize="451.2,672.8" sap2010:WorkflowViewState.IdRef="Sequence_6">
                     <sap:WorkflowViewStateService.ViewState>
@@ -323,6 +476,6 @@
         </ui:ForEachRow.Body>
       </ui:ForEachRow>
     </Sequence>
-    <ui:Comment DisplayName="Comment (placeholder)" sap:VirtualizedContainerService.HintSize="521.6,79.2" sap2010:WorkflowViewState.IdRef="Comment_1" Text="//  Invoke steps of the process" />
+    <ui:Comment DisplayName="Comment (placeholder)" sap:VirtualizedContainerService.HintSize="556.8,79.2" sap2010:WorkflowViewState.IdRef="Comment_1" Text="//  Invoke steps of the process" />
   </Sequence>
 </Activity>
